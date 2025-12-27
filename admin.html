@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Anti-Cheat System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .dashboard { padding: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .stat-value { font-size: 2em; font-weight: bold; }
+        .sessions-table { background: white; border-radius: 8px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #34495e; color: white; }
+        .status-active { color: green; }
+        .status-terminated { color: red; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛡️ Exam Security Dashboard</h1>
+    </div>
+    <div class="dashboard">
+        <div class="stats-grid" id="statsGrid">
+            <!-- Stats will be populated by JavaScript -->
+        </div>
+        <div class="sessions-table">
+            <h2>Active Exam Sessions</h2>
+            <table id="sessionsTable">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Session ID</th>
+                        <th>Start Time</th>
+                        <th>Violations</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="sessionsBody">
+                    <!-- Sessions will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        // Admin dashboard functionality
+        async function loadDashboard() {
+            try {
+                const response = await fetch('/api/dashboard/stats');
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateStats(data.stats);
+                    updateSessionsTable(data.stats.recentViolations);
+                }
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+            }
+        }
+        
+        function updateStats(stats) {
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <h3>Total Sessions</h3>
+                    <div class="stat-value">${stats.totalSessions}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Sessions</h3>
+                    <div class="stat-value">${stats.activeSessions}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Terminated</h3>
+                    <div class="stat-value">${stats.terminatedSessions}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Violations</h3>
+                    <div class="stat-value">${stats.totalViolations}</div>
+                </div>
+            `;
+        }
+        
+        function updateSessionsTable(violations) {
+            const tbody = document.getElementById('sessionsBody');
+            tbody.innerHTML = violations.map(violation => `
+                <tr>
+                    <td>${violation.studentId || 'N/A'}</td>
+                    <td>${violation.sessionId || 'N/A'}</td>
+                    <td>${new Date(violation.timestamp).toLocaleTimeString()}</td>
+                    <td>${violation.count || 1}</td>
+                    <td class="status-${violation.action === 'exam_terminated' ? 'terminated' : 'active'}">
+                        ${violation.action === 'exam_terminated' ? 'Terminated' : 'Active'}
+                    </td>
+                    <td>
+                        <button onclick="viewDetails('${violation.sessionId}')">View</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function viewDetails(sessionId) {
+            alert(`Viewing details for session: ${sessionId}`);
+            // In production, open detailed view modal
+        }
+        
+        // Refresh dashboard every 10 seconds
+        setInterval(loadDashboard, 10000);
+        
+        // Initial load
+        loadDashboard();
+    </script>
+</body>
+</html>

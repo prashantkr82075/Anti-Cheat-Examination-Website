@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Exam Platform - Anti-Cheat System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: white;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .security-header {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #00b4d8;
+            box-shadow: 0 4px 20px rgba(0, 180, 216, 0.3);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00b4d8;
+        }
+
+        .security-status {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .warning-banner {
+            background: #ff6b6b;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+
+        .security-panel {
+            width: 300px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-right: 1px solid #00b4d8;
+            overflow-y: auto;
+        }
+
+        .exam-container {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .iframe-wrapper {
+            flex: 1;
+            border: 3px solid #00b4d8;
+            border-radius: 10px;
+            overflow: hidden;
+            background: white;
+            position: relative;
+        }
+
+        #examFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .iframe-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            z-index: 1000;
+        }
+
+        .security-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(0, 180, 216, 0.3);
+        }
+
+        .security-card h3 {
+            color: #00b4d8;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .security-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-good {
+            color: #4CAF50;
+        }
+
+        .status-warning {
+            color: #ff9800;
+        }
+
+        .status-bad {
+            color: #f44336;
+        }
+
+        .violation-log {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #f44336;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            font-size: 12px;
+            padding: 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #00b4d8;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0096c7;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #1a1a2e;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            border: 2px solid #00b4d8;
+        }
+
+        .violation-count {
+            font-size: 48px;
+            color: #f44336;
+            margin: 20px 0;
+        }
+
+        .fullscreen-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            color: red;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            font-size: 48px;
+            z-index: 3000;
+        }
+    </style>
+</head>
+<body>
+    <!-- Fullscreen Warning -->
+    <div id="fullscreenWarning" class="fullscreen-warning">
+        ⚠️ RETURN TO EXAM IMMEDIATELY! ⚠️
+    </div>
+
+    <!-- Security Header -->
+    <div class="security-header">
+        <div class="logo">🛡️ SecureExam Pro</div>
+        <div class="security-status">
+            <div>Security Status: <span id="securityStatusText">ACTIVE</span></div>
+            <div class="status-indicator" id="statusIndicator"></div>
+            <div>Violations: <span id="violationCount">0</span></div>
+        </div>
+    </div>
+
+    <!-- Warning Banner -->
+    <div class="warning-banner" id="warningBanner">
+        WARNING: Unauthorized activity detected! This incident has been logged.
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Security Panel -->
+        <div class="security-panel">
+            <div class="security-card">
+                <h3>🔒 Security Monitor</h3>
+                <div class="security-item">
+                    <span>Tab Focus:</span>
+                    <span id="tabStatus" class="status-good">Active</span>
+                </div>
+                <div class="security-item">
+                    <span>Fullscreen:</span>
+                    <span id="fullscreenStatus" class="status-good">Maintained</span>
+                </div>
+                <div class="security-item">
+                    <span>Developer Tools:</span>
+                    <span id="devToolsStatus" class="status-good">Closed</span>
+                </div>
+                <div class="security-item">
+                    <span>Copy/Paste:</span>
+                    <span id="clipboardStatus" class="status-bad">Disabled</span>
+                </div>
+                <div class="security-item">
+                    <span>Right Click:</span>
+                    <span id="rightClickStatus" class="status-bad">Disabled</span>
+                </div>
+            </div>
+
+            <div class="security-card">
+                <h3>📊 Violation Log</h3>
+                <div class="violation-log" id="violationLog">
+                    <!-- Violation entries will appear here -->
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn-primary" onclick="enterFullscreen()">Enter Fullscreen</button>
+                <button class="btn-danger" onclick="endExam()">End Exam</button>
+            </div>
+        </div>
+
+        <!-- Exam Container -->
+        <div class="exam-container">
+            <div class="iframe-wrapper">
+                <div id="iframeOverlay" class="iframe-overlay">
+                    <div>
+                        <div style="font-size: 48px; margin-bottom: 20px;">📝</div>
+                        <h2>Exam Session Ready</h2>
+                        <p>Click below to start your exam</p>
+                        <button class="btn-primary" onclick="startExam()">Start Exam</button>
+                    </div>
+                </div>
+                <iframe id="examFrame" src="" allow="fullscreen"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Violation Modal -->
+    <div id="violationModal" class="modal">
+        <div class="modal-content">
+            <h2>⚠️ Security Violation Detected!</h2>
+            <div class="violation-count" id="modalViolationCount">1</div>
+            <p id="violationDescription">You have switched tabs/windows during the exam.</p>
+            <p style="margin: 20px 0;">Multiple violations may result in exam termination.</p>
+            <button class="btn-primary" onclick="closeModal()">Acknowledge & Continue</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            GOOGLE_SHEET_URL: 'https://docs.google.com/forms/d/e/1FAIpQLScrdKBnFWs7ScliCuU5fGmaZDchk0T24NzBWDZCruRbtnoFpg/viewform?usp=header',
+            MAX_VIOLATIONS: 5,
+            ALLOW_FULLSCREEN_EXIT: false,
+            ENABLE_STRICT_MODE: true
+        };
+
+        // State variables
+        let violationCount = 0;
+        let examStarted = false;
+        let isFullscreen = false;
+        let devToolsOpen = false;
+        let lastActivity = Date.now();
+        let violationLog = [];
+        let checkInterval;
+
+        // DOM Elements
+        const examFrame = document.getElementById('examFrame');
+        const iframeOverlay = document.getElementById('iframeOverlay');
+        const warningBanner = document.getElementById('warningBanner');
+        const violationModal = document.getElementById('violationModal');
+        const violationLogElement = document.getElementById('violationLog');
+        const violationCountElement = document.getElementById('violationCount');
+        const modalViolationCount = document.getElementById('modalViolationCount');
+        const violationDescription = document.getElementById('violationDescription');
+        const fullscreenWarning = document.getElementById('fullscreenWarning');
+        const tabStatus = document.getElementById('tabStatus');
+        const fullscreenStatus = document.getElementById('fullscreenStatus');
+        const devToolsStatus = document.getElementById('devToolsStatus');
+
+        // Initialize security measures
+        function initializeSecurity() {
+            // Disable right-click
+            document.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                logViolation('Right-click attempted');
+                return false;
+            });
+
+            // Disable text selection
+            document.addEventListener('selectstart', (e) => {
+                e.preventDefault();
+                logViolation('Text selection attempted');
+                return false;
+            });
+
+            // Disable copy/paste
+            document.addEventListener('copy', (e) => {
+                e.preventDefault();
+                logViolation('Copy attempted');
+                return false;
+            });
+
+            document.addEventListener('paste', (e) => {
+                e.preventDefault();
+                logViolation('Paste attempted');
+                return false;
+            });
+
+            // Disable certain keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+                if (e.key === 'F12' || 
+                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
+                    (e.ctrlKey && e.key === 'u')) {
+                    e.preventDefault();
+                    logViolation('Developer tools shortcut used');
+                    return false;
+                }
+
+                // Disable Print Screen
+                if (e.key === 'PrintScreen') {
+                    e.preventDefault();
+                    logViolation('Screenshot attempt detected');
+                    return false;
+                }
+            });
+
+            // Tab visibility detection
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden && examStarted) {
+                    logViolation('Tab/window switched');
+                    showFullscreenWarning();
+                    updateSecurityStatus();
+                }
+            });
+
+            // Fullscreen detection
+            document.addEventListener('fullscreenchange', () => {
+                isFullscreen = !!document.fullscreenElement;
+                updateSecurityStatus();
+                
+                if (!isFullscreen && examStarted && !CONFIG.ALLOW_FULLSCREEN_EXIT) {
+                    logViolation('Fullscreen exited');
+                    enterFullscreen();
+                }
+            });
+
+            // Window resize (minimize detection)
+            window.addEventListener('resize', () => {
+                if (examStarted && !document.hidden) {
+                    logViolation('Window resize/minimize detected');
+                }
+            });
+
+            // Before unload (closing tab/window)
+            window.addEventListener('beforeunload', (e) => {
+                if (examStarted) {
+                    e.preventDefault();
+                    e.returnValue = 'Are you sure you want to leave? This will end your exam.';
+                    logViolation('Attempt to close window');
+                    return e.returnValue;
+                }
+            });
+
+            // Periodic activity check
+            checkInterval = setInterval(() => {
+                if (examStarted) {
+                    checkActivity();
+                    checkDevTools();
+                }
+            }, 1000);
+
+            // Mouse leave detection
+            document.addEventListener('mouseleave', (e) => {
+                if (examStarted && e.clientY < 0) {
+                    logViolation('Mouse left window');
+                }
+            });
+
+            updateSecurityStatus();
+        }
+
+        // Start exam
+        function startExam() {
+            examStarted = true;
+            iframeOverlay.style.display = 'none';
+            examFrame.src = CONFIG.GOOGLE_SHEET_URL;
+            lastActivity = Date.now();
+            
+            // Enter fullscreen automatically
+            enterFullscreen();
+            
+            // Start monitoring
+            startActivityMonitoring();
+        }
+
+        // Enter fullscreen mode
+        function enterFullscreen() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+            isFullscreen = true;
+        }
+
+        // Log violations
+        function logViolation(reason) {
+            if (!examStarted) return;
+            
+            violationCount++;
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = {
+                timestamp,
+                reason,
+                count: violationCount
+            };
+            
+            violationLog.push(logEntry);
+            
+            // Update UI
+            violationCountElement.textContent = violationCount;
+            
+            // Add to log display
+            const logElement = document.createElement('div');
+            logElement.className = 'log-entry';
+            logElement.textContent = `${timestamp} - ${reason}`;
+            violationLogElement.prepend(logElement);
+            
+            // Show warning
+            showWarning(reason);
+            
+            // Check max violations
+            if (violationCount >= CONFIG.MAX_VIOLATIONS) {
+                endExam(true);
+            }
+            
+            // Send to backend
+            reportToBackend(logEntry);
+        }
+
+        // Show warning
+        function showWarning(reason) {
+            warningBanner.textContent = `WARNING: ${reason}! This incident has been logged.`;
+            warningBanner.style.display = 'block';
+            
+            setTimeout(() => {
+                warningBanner.style.display = 'none';
+            }, 5000);
+            
+            // Show modal for serious violations
+            if (violationCount > 0) {
+                modalViolationCount.textContent = violationCount;
+                violationDescription.textContent = reason;
+                violationModal.style.display = 'flex';
+            }
+        }
+
+        // Show fullscreen warning
+        function showFullscreenWarning() {
+            fullscreenWarning.style.display = 'flex';
+            setTimeout(() => {
+                fullscreenWarning.style.display = 'none';
+            }, 3000);
+        }
+
+        // Close modal
+        function closeModal() {
+            violationModal.style.display = 'none';
+        }
+
+        // Update security status display
+        function updateSecurityStatus() {
+            // Tab status
+            if (document.hidden) {
+                tabStatus.textContent = 'Inactive';
+                tabStatus.className = 'status-bad';
+            } else {
+                tabStatus.textContent = 'Active';
+                tabStatus.className = 'status-good';
+            }
+            
+            // Fullscreen status
+            if (isFullscreen) {
+                fullscreenStatus.textContent = 'Maintained';
+                fullscreenStatus.className = 'status-good';
+            } else {
+                fullscreenStatus.textContent = 'Broken';
+                fullscreenStatus.className = 'status-bad';
+            }
+            
+            // Dev tools status
+            if (devToolsOpen) {
+                devToolsStatus.textContent = 'Open';
+                devToolsStatus.className = 'status-bad';
+            } else {
+                devToolsStatus.textContent = 'Closed';
+                devToolsStatus.className = 'status-good';
+            }
+            
+            // Overall security status
+            const securityStatusText = document.getElementById('securityStatusText');
+            const statusIndicator = document.getElementById('statusIndicator');
+            
+            if (violationCount === 0 && isFullscreen && !document.hidden) {
+                securityStatusText.textContent = 'ACTIVE';
+                statusIndicator.style.background = '#4CAF50';
+            } else if (violationCount < 3) {
+                securityStatusText.textContent = 'WARNING';
+                statusIndicator.style.background = '#ff9800';
+            } else {
+                securityStatusText.textContent = 'CRITICAL';
+                statusIndicator.style.background = '#f44336';
+            }
+        }
+
+        // Check for developer tools
+        function checkDevTools() {
+            const widthThreshold = window.outerWidth - window.innerWidth > 160;
+            const heightThreshold = window.outerHeight - window.innerHeight > 160;
+            
+            devToolsOpen = widthThreshold || heightThreshold;
+            
+            if (devToolsOpen && examStarted) {
+                logViolation('Developer tools detected');
+            }
+            
+            updateSecurityStatus();
+        }
+
+        // Activity monitoring
+        function startActivityMonitoring() {
+            document.addEventListener('mousemove', updateActivity);
+            document.addEventListener('keydown', updateActivity);
+            document.addEventListener('click', updateActivity);
+        }
+
+        function updateActivity() {
+            lastActivity = Date.now();
+        }
+
+        function checkActivity() {
+            const now = Date.now();
+            const inactiveTime = now - lastActivity;
+            
+            if (inactiveTime > 30000 && examStarted) { // 30 seconds
+                logViolation('Inactivity detected');
+            }
+        }
+
+        // End exam
+        function endExam(forced = false) {
+            examStarted = false;
+            clearInterval(checkInterval);
+            
+            // Send final report to backend
+            const finalReport = {
+                action: forced ? 'exam_terminated' : 'exam_completed',
+                violations: violationCount,
+                log: violationLog,
+                timestamp: new Date().toISOString()
+            };
+            
+            reportToBackend(finalReport);
+            
+            // Show result
+            alert(forced ? 
+                `Exam terminated due to ${violationCount} security violations.` :
+                'Exam completed. Thank you for participating.'
+            );
+            
+            // Exit fullscreen
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+
+        // Report to backend
+        function reportToBackend(data) {
+            fetch('http://localhost:3000/log-violation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...data,
+                    studentId: getStudentId(),
+                    sessionId: getSessionId(),
+                    timestamp: new Date().toISOString()
+                })
+            }).catch(error => {
+                console.error('Failed to report violation:', error);
+            });
+        }
+
+        // Helper functions
+        function getStudentId() {
+            return localStorage.getItem('studentId') || 'unknown';
+        }
+
+        function getSessionId() {
+            if (!localStorage.getItem('sessionId')) {
+                localStorage.setItem('sessionId', generateSessionId());
+            }
+            return localStorage.getItem('sessionId');
+        }
+
+        function generateSessionId() {
+            return 'session_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeSecurity();
+            
+            // Set student ID (in real app, this would come from login)
+            const urlParams = new URLSearchParams(window.location.search);
+            const studentId = urlParams.get('studentId') || 'demo_student_001';
+            localStorage.setItem('studentId', studentId);
+            
+            console.log('Security system initialized for student:', studentId);
+        });
+    </script>
+</body>
+</html>
